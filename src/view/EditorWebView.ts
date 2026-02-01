@@ -1,4 +1,4 @@
-import { ItemView, WorkspaceLeaf,  Notice, ViewStateResult } from 'obsidian';
+import { ItemView, WorkspaceLeaf, Notice, ViewStateResult } from 'obsidian';
 import WebClipperPlugin from '../main';
 import { WebViewComponent } from '../webViewComponent';
 import { t } from '../translations';
@@ -37,8 +37,28 @@ export class WorkspaceLeafWebView extends ItemView {
         return this.currentTitle;
     }
 
+    private isInPopoutWindow(): boolean {
+        const ownerDoc = this.contentEl?.ownerDocument;
+        return !!ownerDoc && ownerDoc !== document;
+    }
+
+    private handlePopoutWebview(): void {
+        try {
+            this.leaf.setViewState({ type: CLIPPER_VIEW, active: true });
+        } catch (e) {
+            try { this.leaf.detach(); } catch (err) { }
+        }
+    }
+
     private reloadWebView() {
-        this.containerEl.empty();
+        if (!this.contentEl) {
+            return;
+        }
+        if (this.isInPopoutWindow()) {
+            this.handlePopoutWebview();
+            return;
+        }
+        this.contentEl.empty();
         this.createWebViewComponent();
     }
 
@@ -47,7 +67,7 @@ export class WorkspaceLeafWebView extends ItemView {
         try {
             this.leaf.setViewState({ type: CLIPPER_VIEW });
         } catch (e) {
-            try { this.leaf.detach(); } catch (err) {}
+            try { this.leaf.detach(); } catch (err) { }
         }
     }
 
@@ -58,16 +78,20 @@ export class WorkspaceLeafWebView extends ItemView {
         }
         super.setState(state, result);
     }
-    
+
     private createWebViewComponent() {
+        if (this.isInPopoutWindow()) {
+            this.handlePopoutWebview();
+            return;
+        }
         if (!this.plugin.settings.enableWebview) {
             this.handleDisabledWebview();
             return;
         }
 
         this.webViewComponent = new WebViewComponent(
-            this.app, 
-            this.initialUrl, 
+            this.app,
+            this.initialUrl,
             {
                 searchEngine: this.plugin.settings.searchEngine
             },
@@ -85,11 +109,11 @@ export class WorkspaceLeafWebView extends ItemView {
             const leaf = this.app.workspace.getLeaf(true);
             leaf.setViewState({
                 type: VIEW_TYPE_WORKSPACE_WEBVIEW,
-                state: {url: url}
+                state: { url: url }
             })
             this.app.workspace.revealLeaf(leaf);
         })
-  
+
         const containerEl = this.webViewComponent.createContainer();
 
         this.webViewComponent.onTitleChange((title: string) => {
@@ -99,27 +123,38 @@ export class WorkspaceLeafWebView extends ItemView {
                 state: { title: title }
             });
         });
-        
-        this.containerEl.appendChild(containerEl);
+
+        if (this.contentEl) {
+            this.contentEl.appendChild(containerEl);
+        }
     }
 
     async onOpen(): Promise<void> {
-        this.containerEl = this.containerEl.children[1] as HTMLElement;
-        this.containerEl.empty();
-    
+        if (!this.contentEl) {
+            return;
+        }
+        if (this.isInPopoutWindow()) {
+            this.handlePopoutWebview();
+            this.resolveLoadEvent();
+            return;
+        }
+        this.contentEl.empty();
+
         const state = this.leaf.getViewState();
-        if(state.state?.url && typeof state.state.url === 'string'){
+        if (state.state?.url && typeof state.state.url === 'string') {
             this.initialUrl = state.state.url;
-        }else{
+        } else {
             this.initialUrl = this.plugin.settings.defaultWebUrl || 'https://google.com';
         }
-    
+
         this.createWebViewComponent();
         this.resolveLoadEvent();
     }
-    
+
 
     async onClose(): Promise<void> {
-        this.containerEl.empty();
+        if (this.contentEl) {
+            this.contentEl.empty();
+        }
     }
 }
