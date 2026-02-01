@@ -1,6 +1,6 @@
 {
 	"name": "net-clip",
-	"version": "1.4.4",
+	"version": "1.4.5",
 	"description": "Clip, save, search, and browse web pages within Obsidian",
 	"main": "main.js",
 	"scripts": {
