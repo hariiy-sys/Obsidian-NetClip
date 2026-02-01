@@ -9,7 +9,7 @@ import { AIPrompt } from './settings';
 import { Modal } from 'obsidian';
 import { GeminiService } from './services/gemini';
 
-interface TabContent{
+interface TabContent {
     content: HTMLElement;
     heading: HTMLElement;
     navButton: HTMLElement;
@@ -21,7 +21,7 @@ export default class NetClipSettingTab extends PluginSettingTab {
     viewPosition: string;
     defaultFolderName: string;
     defaultWebUrl: string;
-    searchEngine: 'google' | 'youtube' | 'bing' | 'perplexity' | 'duckduckgo' | 'genspark' | 'kagi';
+    searchEngine: 'google' | 'youtube' | 'bing' | 'perplexity' | 'duckduckgo' | 'kagi' | 'brave';
     webViewControls: any;
     id: string;
     categories: string[];
@@ -41,26 +41,26 @@ export default class NetClipSettingTab extends PluginSettingTab {
     }
 
     private async syncCategoriesFolders() {
-        const mainFolderPath = this.plugin.settings.parentFolderPath 
+        const mainFolderPath = this.plugin.settings.parentFolderPath
             ? `${this.plugin.settings.parentFolderPath}/${this.plugin.settings.defaultFolderName}`
             : this.plugin.settings.defaultFolderName;
-            
+
         const mainFolder = this.app.vault.getFolderByPath(mainFolderPath);
         if (!mainFolder) return;
-    
+
         const subfolders = mainFolder.children
             .filter(file => file instanceof TFolder)
             .map(folder => folder.name);
-    
+
         this.plugin.settings.categories = subfolders;
         await this.plugin.saveSettings();
     }
 
     private async deleteCategory(category: string) {
-        const baseFolderPath = this.plugin.settings.parentFolderPath 
+        const baseFolderPath = this.plugin.settings.parentFolderPath
             ? `${this.plugin.settings.parentFolderPath}/${this.plugin.settings.defaultFolderName}`
             : this.plugin.settings.defaultFolderName;
-            
+
         const folderPath = `${baseFolderPath}/${category}`;
         const folder = this.app.vault.getFolderByPath(folderPath);
 
@@ -94,10 +94,10 @@ export default class NetClipSettingTab extends PluginSettingTab {
 
 
     private async createCategoryFolder(categoryName: string): Promise<boolean> {
-        const baseFolderPath = this.plugin.settings.parentFolderPath 
+        const baseFolderPath = this.plugin.settings.parentFolderPath
             ? `${this.plugin.settings.parentFolderPath}/${this.plugin.settings.defaultFolderName}`
             : this.plugin.settings.defaultFolderName;
-            
+
         const folderPath = `${baseFolderPath}/${categoryName}`;
         const existingFolder = this.app.vault.getFolderByPath(folderPath);
 
@@ -108,7 +108,7 @@ export default class NetClipSettingTab extends PluginSettingTab {
 
         const baseFolder = this.app.vault.getFolderByPath(baseFolderPath);
         if (!baseFolder) {
-            if (this.plugin.settings.parentFolderPath && 
+            if (this.plugin.settings.parentFolderPath &&
                 !this.app.vault.getFolderByPath(this.plugin.settings.parentFolderPath)) {
                 await this.app.vault.createFolder(this.plugin.settings.parentFolderPath);
             }
@@ -122,28 +122,28 @@ export default class NetClipSettingTab extends PluginSettingTab {
 
 
     private async renameFolderAndUpdatePaths(oldPath: string, newPath: string): Promise<boolean> {
-        const fullOldPath = this.plugin.settings.parentFolderPath 
+        const fullOldPath = this.plugin.settings.parentFolderPath
             ? `${this.plugin.settings.parentFolderPath}/${oldPath}`
             : oldPath;
-        
-        const fullNewPath = this.plugin.settings.parentFolderPath 
+
+        const fullNewPath = this.plugin.settings.parentFolderPath
             ? `${this.plugin.settings.parentFolderPath}/${newPath}`
             : newPath;
-        
+
         const oldFolder = this.app.vault.getFolderByPath(fullOldPath);
         if (!oldFolder) {
             new Notice(t('folder_not_found').replace('{0}', fullOldPath));
             return false;
         }
-    
+
         const newFolder = this.app.vault.getFolderByPath(fullNewPath);
         if (newFolder) {
             new Notice(t('folder_exists').replace('{0}', fullNewPath));
             return false;
         }
-    
+
         await this.app.fileManager.renameFile(oldFolder, fullNewPath);
-    
+
         for (const category of this.plugin.settings.categories) {
             const oldCategoryPath = `${fullOldPath}/${category}`;
             const newCategoryPath = `${fullNewPath}/${category}`;
@@ -152,17 +152,17 @@ export default class NetClipSettingTab extends PluginSettingTab {
                 await this.app.fileManager.renameFile(categoryFolder, newCategoryPath);
             }
         }
-    
+
         return true;
     }
 
     private async openEditCategoryModal(oldCategoryName: string) {
         const modal = new Modal(this.app);
         modal.titleEl.setText(`Edit Category: ${oldCategoryName}`);
-        
+
         const content = modal.contentEl;
         let newCategoryName = oldCategoryName;
-        
+
         new Setting(content)
             .setName('New category name')
             .setDesc('Enter the new name for this category')
@@ -172,7 +172,7 @@ export default class NetClipSettingTab extends PluginSettingTab {
                 .onChange(value => {
                     newCategoryName = value.trim();
                 }));
-        
+
         new Setting(content)
             .addButton(btn => btn
                 .setButtonText('Cancel')
@@ -198,13 +198,13 @@ export default class NetClipSettingTab extends PluginSettingTab {
                         return;
                     }
 
-                    const baseFolderPath = this.plugin.settings.parentFolderPath 
+                    const baseFolderPath = this.plugin.settings.parentFolderPath
                         ? `${this.plugin.settings.parentFolderPath}/${this.plugin.settings.defaultFolderName}`
                         : this.plugin.settings.defaultFolderName;
-                    
+
                     const oldPath = `${baseFolderPath}/${oldCategoryName}`;
                     const newPath = `${baseFolderPath}/${newCategoryName}`;
-                    
+
                     const oldFolder = this.app.vault.getFolderByPath(oldPath);
                     if (!oldFolder) {
                         new Notice(`Category folder not found`);
@@ -219,7 +219,7 @@ export default class NetClipSettingTab extends PluginSettingTab {
 
                     try {
                         await this.app.fileManager.renameFile(oldFolder, newPath);
-                        
+
                         // Update settings
                         const categoryIndex = this.plugin.settings.categories.indexOf(oldCategoryName);
                         if (categoryIndex > -1) {
@@ -240,16 +240,16 @@ export default class NetClipSettingTab extends PluginSettingTab {
                         new Notice(`Failed to rename category: ${error}`);
                     }
                 }));
-        
+
         modal.open();
     }
 
-    private settingTitile(){
-        new Setting(this.containerEl).setName('Netclip').setHeading(); 
+    private settingTitile() {
+        new Setting(this.containerEl).setName('Netclip').setHeading();
     }
 
 
-    private addTabHeader(){
+    private addTabHeader() {
         const navContainer = this.containerEl.createEl("nav", {
             cls: "netclip-setting-header",
         });
@@ -298,7 +298,7 @@ export default class NetClipSettingTab extends PluginSettingTab {
         navigateEl: HTMLElement,
         containerEl: HTMLElement,
         generateTabContent?: (el: HTMLElement) => void
-    ){
+    ) {
         const displayTabContent = this.selectedTab === tabName;
         const tabEl = navigateEl.createDiv("netclip-navigation-item");
 
@@ -306,7 +306,7 @@ export default class NetClipSettingTab extends PluginSettingTab {
             tabEl.addClass("netclip-navigation-item-selected");
         }
 
-        const iconMap: {[key: string]: string} ={
+        const iconMap: { [key: string]: string } = {
             "Web view": "globe",
             "Clipper": "scissors",
             "AI prompts": "bot",
@@ -314,7 +314,7 @@ export default class NetClipSettingTab extends PluginSettingTab {
             "Support": "help",
         }
 
-        if (iconMap[tabName]){
+        if (iconMap[tabName]) {
             const iconEl = tabEl.createSpan({
                 cls: "netclip-tab-icon"
             })
@@ -325,13 +325,13 @@ export default class NetClipSettingTab extends PluginSettingTab {
         tabEl.createSpan().setText(t(translationKey));
 
         tabEl.onclick = () => {
-            if(this.selectedTab === tabName) return;
+            if (this.selectedTab === tabName) return;
             const tab = this.tabContent.get(tabName);
             (tab?.content as HTMLElement).show();
 
             tabEl.addClass("netclip-navigation-item-selected");
 
-            if(this.selectedTab){
+            if (this.selectedTab) {
                 const prevTab = this.tabContent.get(this.selectedTab);
                 prevTab?.navButton.removeClass("netclip-navigation-item-selected");
                 (prevTab?.content as HTMLElement).hide();
@@ -340,7 +340,7 @@ export default class NetClipSettingTab extends PluginSettingTab {
         };
 
         const tabContent = containerEl.createDiv("netclip-tab-settings");
-        if(!displayTabContent){
+        if (!displayTabContent) {
             (tabContent as HTMLElement).hide();
         }
 
@@ -356,7 +356,7 @@ export default class NetClipSettingTab extends PluginSettingTab {
 
     }
 
-    display(): void{
+    display(): void {
         const { containerEl } = this;
         containerEl.empty();
 
@@ -365,7 +365,7 @@ export default class NetClipSettingTab extends PluginSettingTab {
     }
 
 
-    private webViewSettings(containerEl: HTMLElement){
+    private webViewSettings(containerEl: HTMLElement) {
         new Setting(containerEl).setName('Web view').setHeading()
         this.syncCategoriesFolders();
 
@@ -388,10 +388,9 @@ export default class NetClipSettingTab extends PluginSettingTab {
                     .addOption('bing', 'Bing')
                     .addOption('perplexity', 'Perplexity')
                     .addOption('duckduckgo', 'Duckduckgo')
-                    .addOption('genspark', 'Genspark')
                     .addOption('kagi', 'Kagi')
-                    .setValue(this.plugin.settings.searchEngine)
-                    .onChange(async (value: 'google' | 'youtube' | 'bing' | 'perplexity' | 'duckduckgo' | 'genspark' | 'kagi') => {
+                    .addOption('brave', 'Brave')
+                    .onChange(async (value: 'google' | 'youtube' | 'bing' | 'perplexity' | 'duckduckgo' | 'kagi' | 'brave') => {
                         this.plugin.settings.searchEngine = value;
                         await this.plugin.saveSettings();
                     })
@@ -415,45 +414,45 @@ export default class NetClipSettingTab extends PluginSettingTab {
                     })
             );
 
-            new Setting(containerEl)
-              .setName(t('enable_ad_blocking'))
-              .setDesc(t('enable_ad_blocking_desc'))
-              .addToggle(toggle => toggle 
+        new Setting(containerEl)
+            .setName(t('enable_ad_blocking'))
+            .setDesc(t('enable_ad_blocking_desc'))
+            .addToggle(toggle => toggle
                 .setValue(this.plugin.settings.adBlock.enabled)
                 .onChange(async (value) => {
                     this.plugin.settings.adBlock.enabled = value;
                     await this.plugin.saveSettings();
                     this.display
                 })
-              )
+            )
 
-              new Setting(containerEl)
-               .setName(t('private_mode'))
-               .setDesc(t('private_mode_desc'))
-               .addToggle(toggle => toggle
-                  .setValue(this.plugin.settings.privateMode)
-                  .onChange(async (value) => {
+        new Setting(containerEl)
+            .setName(t('private_mode'))
+            .setDesc(t('private_mode_desc'))
+            .addToggle(toggle => toggle
+                .setValue(this.plugin.settings.privateMode)
+                .onChange(async (value) => {
                     this.plugin.settings.privateMode = value;
                     await this.plugin.saveSettings();
-                  })
-               );
+                })
+            );
 
-               new Setting(containerEl)
-                .setName(t('enable_webview'))
-                .setDesc(t('enable_webview_desc'))
-                .addToggle(toggle => toggle
-                   .setValue(this.plugin.settings.enableWebview)
-                   .onChange(async (value) => {
-                     await this.plugin.setWebviewEnabled(value);
-                     await this.plugin.refreshHomeViews();
-                     this.display();
-                   })
-                );
+        new Setting(containerEl)
+            .setName(t('enable_webview'))
+            .setDesc(t('enable_webview_desc'))
+            .addToggle(toggle => toggle
+                .setValue(this.plugin.settings.enableWebview)
+                .onChange(async (value) => {
+                    await this.plugin.setWebviewEnabled(value);
+                    await this.plugin.refreshHomeViews();
+                    this.display();
+                })
+            );
     }
 
 
 
-    private clipperTab(containerEl: HTMLElement){
+    private clipperTab(containerEl: HTMLElement) {
         new Setting(containerEl).setName('Clipper').setHeading()
 
         new Setting(containerEl)
@@ -631,12 +630,12 @@ export default class NetClipSettingTab extends PluginSettingTab {
                 .onClick(() => {
                     const modal = new Modal(this.app);
                     modal.titleEl.setText('Add Domain Save Location');
-                    
+
                     const content = modal.contentEl;
                     let domainValue = '';
                     let locationValue = '';
                     let locationButton: ButtonComponent;
-                    
+
                     new Setting(content)
                         .setName('Domain')
                         .setDesc('Enter website domain (e.g., reddit.com)')
@@ -645,7 +644,7 @@ export default class NetClipSettingTab extends PluginSettingTab {
                             .onChange(value => {
                                 domainValue = value.trim().toLowerCase();
                             }));
-                            
+
                     new Setting(content)
                         .setName('Save Location')
                         .addButton(button => {
@@ -661,7 +660,7 @@ export default class NetClipSettingTab extends PluginSettingTab {
                                     folderModal.open();
                                 });
                         });
-                            
+
                     new Setting(content)
                         .addButton(button => button
                             .setButtonText('Save')
@@ -679,7 +678,7 @@ export default class NetClipSettingTab extends PluginSettingTab {
                             .onClick(() => {
                                 modal.close();
                             }));
-                            
+
                     modal.open();
                 }));
 
@@ -792,7 +791,7 @@ export default class NetClipSettingTab extends PluginSettingTab {
                         });
                     return text;
                 });
-            
+
             if (this.plugin.settings.categoryIcons[category]) {
                 setting.setDesc(`Current icon: ${this.plugin.settings.categoryIcons[category]}`);
             }
@@ -800,35 +799,35 @@ export default class NetClipSettingTab extends PluginSettingTab {
     }
 
 
-    private homeTab(containerEl: HTMLElement){
+    private homeTab(containerEl: HTMLElement) {
         new Setting(containerEl)
-        .setName(t('home_tab'))
-        .setHeading();
+            .setName(t('home_tab'))
+            .setHeading();
 
         new Setting(containerEl)
-        .setName(t('replace_new_tabs'))
-        .setDesc(t('replace_new_tabs_desc'))
-        .addToggle(toggle => {
-            toggle
-                .setValue(this.plugin.settings.replaceTabHome)
-                .onChange(async (value) => {
-                    this.plugin.settings.replaceTabHome = value;
-                    await this.plugin.saveSettings();
-                });
-        });
+            .setName(t('replace_new_tabs'))
+            .setDesc(t('replace_new_tabs_desc'))
+            .addToggle(toggle => {
+                toggle
+                    .setValue(this.plugin.settings.replaceTabHome)
+                    .onChange(async (value) => {
+                        this.plugin.settings.replaceTabHome = value;
+                        await this.plugin.saveSettings();
+                    });
+            });
 
         new Setting(containerEl)
-        .setName(t('show_clock'))
-        .setDesc(t('show_clock_desc'))
-        .addToggle(toggle => {
-            toggle
-                .setValue(this.plugin.settings.showClock)
-                .onChange(async (value) => {
-                    this.plugin.settings.showClock = value;
-                    await this.plugin.saveSettings();
-                    this.plugin.refreshHomeViews();
-                });
-        });
+            .setName(t('show_clock'))
+            .setDesc(t('show_clock_desc'))
+            .addToggle(toggle => {
+                toggle
+                    .setValue(this.plugin.settings.showClock)
+                    .onChange(async (value) => {
+                        this.plugin.settings.showClock = value;
+                        await this.plugin.saveSettings();
+                        this.plugin.refreshHomeViews();
+                    });
+            });
 
         new Setting(containerEl)
             .setName(t('show_recent_files'))
@@ -842,19 +841,19 @@ export default class NetClipSettingTab extends PluginSettingTab {
                         this.plugin.refreshHomeViews();
                     });
             });
-                     
+
         new Setting(containerEl)
-        .setName(t('show_saved_articles'))
-        .setDesc(t('show_saved_articles_desc'))
-        .addToggle(toggle => {
-            toggle
-                .setValue(this.plugin.settings.homeTab.showSavedArticles)
-                .onChange(async (value) => {
-                    this.plugin.settings.homeTab.showSavedArticles = value;
-                    await this.plugin.saveSettings();
-                    this.plugin.refreshHomeViews();
-                });
-        });
+            .setName(t('show_saved_articles'))
+            .setDesc(t('show_saved_articles_desc'))
+            .addToggle(toggle => {
+                toggle
+                    .setValue(this.plugin.settings.homeTab.showSavedArticles)
+                    .onChange(async (value) => {
+                        this.plugin.settings.homeTab.showSavedArticles = value;
+                        await this.plugin.saveSettings();
+                        this.plugin.refreshHomeViews();
+                    });
+            });
 
         new Setting(containerEl)
             .setName('Background Image')
@@ -929,7 +928,7 @@ export default class NetClipSettingTab extends PluginSettingTab {
     }
 
 
-    private aiTab(containerEl: HTMLElement){
+    private aiTab(containerEl: HTMLElement) {
         new Setting(containerEl).setName('AI prompts').setHeading();
 
         new Setting(containerEl)
@@ -978,13 +977,13 @@ export default class NetClipSettingTab extends PluginSettingTab {
 
         const infoDiv = containerEl.createDiv('netclip-info-box');
         const infoContent = infoDiv.createDiv('netclip-info-content');
-        
+
         const infoIcon = infoContent.createSpan('netclip-info-icon');
         setIcon(infoIcon, 'info');
-        
+
         const textSpan = infoContent.createSpan();
         textSpan.setText('Learn how to create and use AI prompts effectively');
-        
+
         const detailsLink = infoContent.createEl('a', {
             text: 'View Documentation →',
             href: 'https://github.com/Elhary/Obsidian-NetClip/blob/main/AI_PROMPTS.md'
@@ -1035,18 +1034,18 @@ export default class NetClipSettingTab extends PluginSettingTab {
                                 try {
                                     const text = await file.text();
                                     const prompts = JSON.parse(text);
-                                    
+
                                     // Validate the imported data
-                                    if (!Array.isArray(prompts) || !prompts.every(p => 
-                                        typeof p === 'object' && 
-                                        typeof p.name === 'string' && 
-                                        typeof p.prompt === 'string' && 
-                                        typeof p.enabled === 'boolean' && 
+                                    if (!Array.isArray(prompts) || !prompts.every(p =>
+                                        typeof p === 'object' &&
+                                        typeof p.name === 'string' &&
+                                        typeof p.prompt === 'string' &&
+                                        typeof p.enabled === 'boolean' &&
                                         typeof p.variables === 'object'
                                     )) {
                                         throw new Error('Invalid format');
                                     }
-                                    
+
                                     this.plugin.settings.prompts = prompts;
                                     await this.plugin.saveSettings();
                                     new Notice(t('import_success'));
@@ -1089,7 +1088,7 @@ export default class NetClipSettingTab extends PluginSettingTab {
                             const modal = new Modal(this.app);
                             modal.titleEl.setText('Delete Prompt');
                             modal.contentEl.createDiv().setText(`Are you sure you want to delete the prompt "${prompt.name}"?`);
-                            
+
                             new Setting(modal.contentEl)
                                 .addButton(btn => btn
                                     .setButtonText('Cancel')
@@ -1105,7 +1104,7 @@ export default class NetClipSettingTab extends PluginSettingTab {
                                         this.display();
                                         modal.close();
                                     }));
-                            
+
                             modal.open();
                         }));
             });
@@ -1139,7 +1138,7 @@ export default class NetClipSettingTab extends PluginSettingTab {
         const githubLink = githubContainer.createEl('a', {
             href: 'https://github.com/Elhary/Obsidian-NetClip'
         });
-        
+
         githubLink.setAttribute('target', '_blank');
         githubLink.createEl('img', {
             attr: {

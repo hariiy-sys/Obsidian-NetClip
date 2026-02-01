@@ -6,7 +6,7 @@ export interface NetClipSettings {
     parentFolderPath: string;
     defaultWebUrl: string;
     enableWebview: boolean;
-    searchEngine: 'google' | 'youtube' | 'bing' | 'perplexity' | 'duckduckgo' | 'genspark' | 'kagi';
+    searchEngine: 'google' | 'youtube' | 'bing' | 'perplexity' | 'duckduckgo' | 'kagi' | 'brave';
     geminiModel: 'gemini-2.5-pro' | 'gemini-flash-latest' | 'gemini-flash-lite-latest' | 'gemini-2.5-flash-lite';
     categories: string[];
     categoryIcons: Record<string, string>;
@@ -19,8 +19,8 @@ export interface NetClipSettings {
     enableAI: boolean;
     prompts: AIPrompt[];
     defaultSaveLocations: {
-        defaultLocation: string; 
-        domainMappings: Record<string, string>;  
+        defaultLocation: string;
+        domainMappings: Record<string, string>;
     };
     cardDisplay: {
         showDescription: boolean;
@@ -51,7 +51,7 @@ export interface AIPrompt {
 }
 
 export const DEFAULT_SETTINGS: NetClipSettings = {
-    viewPosition: 'right',
+    viewPosition: 'default',
     defaultFolderName: 'NetClip',
     parentFolderPath: '',
     defaultWebUrl: 'https://google.com',

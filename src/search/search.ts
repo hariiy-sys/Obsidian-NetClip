@@ -1,8 +1,8 @@
-import { baseSearchUrls } from './searchUrls';  
-import { fetchSuggestions } from './fetchSuggestions'; 
+import { baseSearchUrls } from './searchUrls';
+import { fetchSuggestions } from './fetchSuggestions';
 
 export interface WebSearchSettings {
-    searchEngine?: 'google' | 'youtube' | 'bing' | 'perplexity' | 'duckduckgo' | 'genspark' | 'kagi';
+    searchEngine?: 'google' | 'youtube' | 'bing' | 'perplexity' | 'duckduckgo' | 'kagi' | 'brave';
 }
 
 export class WebSearch {
@@ -39,13 +39,13 @@ export class WebSearch {
 
 
         this.suggestionContainer.classList.add('netclip_search_hidden');
-        
+
         // Bind event handlers
         this.handleInput = this.onInput.bind(this);
         this.handleKeydown = this.onKeydown.bind(this);
         this.handleBlur = this.onBlur.bind(this);
         this.handleWindowClick = this.onWindowClick.bind(this);
-        
+
         this.setupEventListeners();
     }
 
@@ -135,7 +135,7 @@ export class WebSearch {
         const searchUrl = this.isValidUrl(query)
             ? query
             : this.constructSearchUrl(query);
-            
+
         const event = new CustomEvent('search-query', {
             detail: { url: searchUrl, query: query }
         });
@@ -205,15 +205,15 @@ export class WebSearch {
     }
 
     public unload(): void {
-       
+
         this.searchInput.removeEventListener('input', this.handleInput);
         this.searchInput.removeEventListener('keydown', this.handleKeydown);
         this.searchInput.removeEventListener('blur', this.handleBlur);
         window.removeEventListener('click', this.handleWindowClick);
 
         this.hideSuggestions();
-        
-      
+
+
         if (this.suggestionContainer.parentNode) {
             this.suggestionContainer.remove();
         }
