@@ -43,7 +43,7 @@ export class ClipperHomeView extends ItemView {
         this.containerEl.empty();
 
         const clipperContainer = this.containerEl.createEl('div', { cls: 'net_clipper_container' });
-        
+
         const clipperHeader = clipperContainer.createEl('div', { cls: 'net_clipper_header' });
         const rightContainer = clipperHeader.createEl('div', { cls: 'net_clipper_header_right' });
 
@@ -90,16 +90,16 @@ export class ClipperHomeView extends ItemView {
             placeholder: t('search_saved_articles')
         });
 
-        const bottomContainer = clipperContainer.createEl('div', {cls: 'netclip_bottom_container'})
-        const categoryTabsContainer = bottomContainer.createEl('div', { cls: 'netclip_category_tabs'});
+        const bottomContainer = clipperContainer.createEl('div', { cls: 'netclip_bottom_container' })
+        const categoryTabsContainer = bottomContainer.createEl('div', { cls: 'netclip_category_tabs' });
         this.renderCategoryTabs(categoryTabsContainer);
 
         const sortContainer = bottomContainer.createEl('div', { cls: 'netclip_sort_container' });
-        const domainSortButton = sortContainer.createEl('button', { 
+        const domainSortButton = sortContainer.createEl('button', {
             cls: 'netclip_sort_button',
             attr: { 'aria-label': t('domain_filter') }
         });
-        const sortButton = sortContainer.createEl('button', { 
+        const sortButton = sortContainer.createEl('button', {
             cls: 'netclip_sort_button',
             attr: { 'aria-label': t('sort_by') }
         });
@@ -121,29 +121,29 @@ export class ClipperHomeView extends ItemView {
 
         sortButton.addEventListener('click', (event) => {
             const menu = new Menu();
-            
-            menu.addItem((item) => 
+
+            menu.addItem((item) =>
                 item
                     .setTitle(t('sort_a_z'))
                     .setIcon('arrow-up')
                     .onClick(() => this.applySort('a-z'))
             );
-            
-            menu.addItem((item) => 
+
+            menu.addItem((item) =>
                 item
                     .setTitle(t('sort_z_a'))
                     .setIcon('arrow-down')
                     .onClick(() => this.applySort('z-a'))
             );
-            
-            menu.addItem((item) => 
+
+            menu.addItem((item) =>
                 item
                     .setTitle(t('sort_newest_first'))
                     .setIcon('arrow-down')
                     .onClick(() => this.applySort('new-old'))
             );
-            
-            menu.addItem((item) => 
+
+            menu.addItem((item) =>
                 item
                     .setTitle(t('sort_oldest_first'))
                     .setIcon('arrow-up')
@@ -158,7 +158,7 @@ export class ClipperHomeView extends ItemView {
             const files = this.app.vault.getMarkdownFiles();
             const domains = new Set<string>();
 
-            const baseFolderPath = this.settings.parentFolderPath 
+            const baseFolderPath = this.settings.parentFolderPath
                 ? `${this.settings.parentFolderPath}/${this.settings.defaultFolderName}`
                 : this.settings.defaultFolderName;
 
@@ -173,7 +173,7 @@ export class ClipperHomeView extends ItemView {
                 }
             }));
 
-            menu.addItem((item) => 
+            menu.addItem((item) =>
                 item
                     .setTitle(t('all_domains'))
                     .setIcon('dot')
@@ -182,7 +182,7 @@ export class ClipperHomeView extends ItemView {
 
             domains.forEach(domain => {
                 const displayName = domain.replace('.com', '');
-                menu.addItem((item) => 
+                menu.addItem((item) =>
                     item
                         .setTitle(displayName)
                         .setIcon('dot')
@@ -199,7 +199,7 @@ export class ClipperHomeView extends ItemView {
             (this.app as any).setting.open();
             (this.app as any).setting.openTabById(this.plugin.manifest.id);
         });
-          
+
         clipButton.addEventListener("click", () => {
             new ClipModal(this.app, this.plugin).open();
         });
@@ -217,13 +217,13 @@ export class ClipperHomeView extends ItemView {
         await this.renderSavedContent(savedContainer, '', 'a-z', domain);
     }
 
-    public renderCategoryTabs(tabsContainer: HTMLElement){
+    public renderCategoryTabs(tabsContainer: HTMLElement) {
         tabsContainer.empty();
 
-        const allTab = tabsContainer.createEl('div', { 
+        const allTab = tabsContainer.createEl('div', {
             cls: `netclip_category_tab ${this.currentCategory === '' ? 'active' : ''}`,
         });
-        
+
         const allTabContent = allTab.createEl('div', { cls: 'netclip-category-content' });
         allTabContent.createEl('span', { text: t('all') });
 
@@ -239,7 +239,7 @@ export class ClipperHomeView extends ItemView {
             const file = this.app.vault.getAbstractFileByPath(path) as TFile | null;
             if (!file || !(file as TFile).path) return;
 
-            const baseFolderPath = this.settings.parentFolderPath 
+            const baseFolderPath = this.settings.parentFolderPath
                 ? `${this.settings.parentFolderPath}/${this.settings.defaultFolderName}`
                 : this.settings.defaultFolderName;
 
@@ -274,7 +274,7 @@ export class ClipperHomeView extends ItemView {
             const onDocDragOver = (e: DragEvent) => {
                 try {
                     if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
-                } catch (err) {}
+                } catch (err) { }
                 const h = document.querySelector('.netclip-drag-helper') as HTMLElement | null;
                 if (h) {
                     h.style.display = 'block';
@@ -305,30 +305,30 @@ export class ClipperHomeView extends ItemView {
             const tab = tabsContainer.createEl('div', {
                 cls: `netclip_category_tab ${this.currentCategory === category ? 'active' : ''}`,
             });
-            
+
             const tabContent = tab.createEl('div', { cls: 'netclip-category-content' });
-            
+
             if (this.plugin.settings.categoryIcons[category]) {
                 const iconSpan = tabContent.createEl('span', { cls: 'category-icon' });
                 setIcon(iconSpan, this.plugin.settings.categoryIcons[category]);
             }
-            
+
             tabContent.createEl('span', { text: category });
-            
+
 
             tab.dataset.category = category;
             tab.addEventListener('click', () => this.switchCategory(category, tabsContainer));
-            tab.addEventListener('dragover', (e: DragEvent) => { 
-                e.preventDefault(); 
-                try { if (e.dataTransfer) e.dataTransfer.dropEffect = 'move'; } catch (err) {}
-                tab.classList.add('drag-over'); 
+            tab.addEventListener('dragover', (e: DragEvent) => {
+                e.preventDefault();
+                try { if (e.dataTransfer) e.dataTransfer.dropEffect = 'move'; } catch (err) { }
+                tab.classList.add('drag-over');
                 const h = document.querySelector('.netclip-drag-helper') as HTMLElement | null;
                 if (h) {
                     const action = h.querySelector('.netclip-drag-action') as HTMLElement | null;
                     if (action) action.textContent = `Move to "${category}"`;
                 }
             });
-            tab.addEventListener('dragleave', () => { 
+            tab.addEventListener('dragleave', () => {
                 tab.classList.remove('drag-over');
                 const h = document.querySelector('.netclip-drag-helper') as HTMLElement | null;
                 if (h) {
@@ -344,7 +344,7 @@ export class ClipperHomeView extends ItemView {
                 const file = this.app.vault.getAbstractFileByPath(path) as TFile | null;
                 if (!file || !(file as TFile).path) return;
 
-                const baseFolderPath = this.settings.parentFolderPath 
+                const baseFolderPath = this.settings.parentFolderPath
                     ? `${this.settings.parentFolderPath}/${this.settings.defaultFolderName}`
                     : this.settings.defaultFolderName;
 
@@ -377,7 +377,7 @@ export class ClipperHomeView extends ItemView {
             tabsContainer.scrollLeft += e.deltaY;
         }, { passive: false });
 
-    
+
         tabsContainer.tabIndex = 0;
         tabsContainer.addEventListener('keydown', (e: KeyboardEvent) => {
             if (e.key === 'ArrowRight') tabsContainer.scrollLeft += 120;
@@ -412,11 +412,11 @@ export class ClipperHomeView extends ItemView {
 
     private async switchCategory(category: string, tabsContainer: HTMLElement) {
         this.currentCategory = category;
-        
+
         const tabs = tabsContainer.querySelectorAll('.netclip_category_tab');
         tabs.forEach(tab => {
             tab.classList.remove('active');
-            if ((category === '' && tab.textContent === t('all')) || 
+            if ((category === '' && tab.textContent === t('all')) ||
                 tab.textContent === category) {
                 tab.classList.add('active');
             }
@@ -430,16 +430,19 @@ export class ClipperHomeView extends ItemView {
         container.empty();
 
         const files = this.app.vault.getMarkdownFiles();
-        const baseFolderPath = this.settings.parentFolderPath 
+        const baseFolderPath = this.settings.parentFolderPath
             ? `${this.settings.parentFolderPath}/${this.settings.defaultFolderName}`
             : this.settings.defaultFolderName;
 
         const clippedFiles = files.filter(file => {
-            const isInMainFolder = file.path.startsWith(baseFolderPath);
+            const basePrefix = `${baseFolderPath}/`;
+            const isInMainFolder = file.path.startsWith(basePrefix);
             if (!this.currentCategory) {
                 return isInMainFolder;
             }
-            return file.path.startsWith(`${baseFolderPath}/${this.currentCategory}`);
+            const categoryPath = `${baseFolderPath}/${this.currentCategory}`;
+            const categoryPrefix = `${categoryPath}/`;
+            return file.path.startsWith(categoryPrefix);
         });
 
         let filteredFiles = filter
@@ -497,7 +500,7 @@ export class ClipperHomeView extends ItemView {
                         img.src = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
                         dt.setDragImage(img, 0, 0);
                     } catch (err) {
-                       
+
                     }
                 }
 
@@ -532,19 +535,19 @@ export class ClipperHomeView extends ItemView {
                     thumbnailUrl = await findFirstImageInNote(this.app, content);
                 }
 
-                clippedEl.createEl("img", { 
-                    attr: { 
+                clippedEl.createEl("img", {
+                    attr: {
                         src: thumbnailUrl || DEFAULT_IMAGE,
                         loading: "lazy"
-                    } 
+                    }
                 });
 
                 clippedEl.dataset.thumbnail = (thumbnailUrl || DEFAULT_IMAGE) as string;
-                clippedEl.dataset.title = file.basename; 
+                clippedEl.dataset.title = file.basename;
             }
 
             const contentContainer = clippedEl.createEl('div', { cls: 'netclip_card_content' });
-    
+
             const topContainer = contentContainer.createEl('div', { cls: 'netclip_card_top' });
             const clippedTitle = topContainer.createEl("h6", { text: file.basename });
             clippedTitle.addEventListener('click', () => {
@@ -554,7 +557,7 @@ export class ClipperHomeView extends ItemView {
             if (this.settings.cardDisplay.showDescription) {
                 const descriptionMatch = content.match(/desc:\s*(?:"([^"]+)"|([^\n]+))/);
                 if (descriptionMatch) {
-                    topContainer.createEl("p", { 
+                    topContainer.createEl("p", {
                         cls: "netclip_card_description",
                         text: descriptionMatch[1] || descriptionMatch[2]
                     });
@@ -600,7 +603,7 @@ export class ClipperHomeView extends ItemView {
             }
 
             this.createMenuButton(bottomContent, file, urlMatch?.[1]);
-            
+
             container.appendChild(clippedEl);
         }
     }
